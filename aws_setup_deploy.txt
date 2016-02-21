@@ -1,0 +1,46 @@
+
+/usr/share/tomcat7/webapps
+/usr/share/tomcat7/conf
+
+#CONNECT TO AWS
+cd ~/aws-keys
+chmod 400 myKey.pem
+ssh -i myKey.pem ec2-user@ec2-52-36-137-48.us-west-2.compute.amazonaws.com
+
+
+#SETUP TOMCAT
+#install tomcat 7
+sudo yum install tomcat7
+
+#start tomcat 7
+sudo service tomcat7 start
+sudo yum install tomcat7-webapps tomcat7-docs-webapp tomcat7-admin-webapps
+
+#check if started
+sudo fuser -v -n tcp 8080
+
+redirect for 80 --> 8080
+sudo /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+sudo /sbin/service iptables save
+
+sudo chkconfig --level 345 tomcat7 on
+chkconfig --list
+
+sudo nano /usr/share/tomcat7/conf/tomcat-users.xml
+
+<role rolename="manager-gui"/>
+<role rolename="manager-script"/>
+<role rolename="manager-jmx"/>
+<role rolename="manager-status"/>
+<role rolename="admin-gui"/>
+
+<user username="tomcat" password="tomcat" roles="manager-gui,manager-status,admin-gui"/>
+<user username="tomcattools" password="tomcat" roles="manager-jmx,manager-script"/>
+
+sudo service tomcat7 restart
+
+#DEPLOY WAR TO TOMCAT
+exit
+scp -i ~/aws-keys/myKey.pem ~/.m2/repository/cmariscal/srmt/0.0.1-SNAPSHOT/srmt-0.0.1-SNAPSHOT.war ec2-user@ec2-52-36-137-48.us-west-2.compute.amazonaws.com:~/srmt.war
+ssh -i myKey.pem ec2-user@ec2-52-36-137-48.us-west-2.compute.amazonaws.com
+sudo cp ~/srmt.war /usr/share/tomcat7/webapps/

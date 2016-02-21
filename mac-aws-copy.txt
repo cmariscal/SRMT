@@ -1,0 +1,83 @@
+cd ~/aws-keys
+chmod 400 myKey.pem
+
+ssh -i myKey.pem ec2-user@ec2-52-36-137-48.us-west-2.compute.amazonaws.com
+scp -i ~/aws-keys/myKey.pem ~/.m2/repository/cmariscal/srmt/0.0.1-SNAPSHOT/srmt-0.0.1-SNAPSHOT.war ec2-user@ec2-52-36-137-48.us-west-2.compute.amazonaws.com:~/usr/share/apache-tomcat-8/webapps/srmt.war
+
+cp ~/deploy/srmt-0.0.1-SNAPSHOT.war /usr/share/apache-tomcat-8/webapps
+
+
+#available java jdk
+yum --enablerepo="*" list available | grep openjdk
+java-1.8.0-openjdk-devel.x86_64
+
+#install java 1.8
+sudo yum install java-1.8.0-openjdk-devel.x86_64
+
+#install tomcat 7
+sudo yum install tomcat7
+
+#start tomcat 7
+sudo service tomcat7 start
+sudo yum install tomcat7-webapps tomcat7-docs-webapp tomcat7-admin-webapps
+
+#check if started
+sudo fuser -v -n tcp 8080
+
+redirect for 80 --> 8080
+sudo /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+sudo /sbin/service iptables save
+
+
+
+#login as sudo to have permissions to download
+sudo -i
+
+#download java 1.8, extact and copy to /usr/share
+wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u65-b17/jdk-8u65-linux-x64.tar.gz
+tar  zxpvf  jdk-8u65-linux-x64.tar.gz
+cp -avr jdk1.8.0_65 /usr/share/java/jdk1.8.0_65
+
+#set env variables for java
+JAVA_HOME=/usr/share/java/jdk1.8.0_65/
+export  JAVA_HOME
+PATH=$JAVA_HOME/bin:$PATH
+export PATH
+
+#download tomcat 8, extract and copy to /usr/share
+wget http://www.motorlogy.com/apache/tomcat/tomcat-8/v8.0.32/bin/apache-tomcat-8.0.32.tar.gz
+tar  zxpvf  apache-tomcat-8.0.32.tar.gz
+cp -avr apache-tomcat-8.0.32 /usr/share/apache-tomcat-8
+
+#logout from sudo
+exit
+
+#create file to auto start tomcat when instance is started
+sudo nano /etc/rc.d/init.d/tomcat
+
+!/bin/sh
+# Tomcat init script for Linux.
+#
+# chkconfig: 2345 96 14
+# description: The Apache Tomcat servlet/JSP container.
+JAVA_HOME=/usr/share/java/jdk1.8.0_65/
+CATALINA_HOME=/usr/share/apache-tomcat-8
+export JAVA_HOME CATALINA_HOME
+exec $CATALINA_HOME/bin/catalina.sh $*
+
+sudo chmod 755 /etc/rc.d/init.d/tomcat
+sudo chkconfig --level 2345 tomcat on
+
+#setup tomcat users
+sudo nano /usr/share/apache-tomcat-8/conf/tomcat-users.xml
+
+<role rolename="manager-gui"/>
+<role rolename="manager-script"/>
+<role rolename="manager-jmx"/>
+<role rolename="manager-status"/>
+<role rolename="admin-gui"/>
+
+<user username="tomcat" password="tomcat" roles="manager-gui,manager-status,admin-gui"/>
+<user username="tomcattools" password="tomcat" roles="manager-jmx,manager-script"/>
+
+/usr/share/apache-tomcat-8/conf
