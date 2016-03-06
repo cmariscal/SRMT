@@ -1,6 +1,7 @@
 package org.cmariscal.srmt.entities;
 
 import javax.persistence.*;
+import java.math.BigInteger;
 import java.util.Date;
 
 /**
@@ -14,7 +15,7 @@ public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "MESSAGE_ID")
-    Long messageId;
+    BigInteger messageId;
 
     @Column(name = "MESSAGE_DATE")
     Date messageDate;
@@ -22,11 +23,11 @@ public class Message {
     @Column(name = "SUBJECT")
     String subject;
 
-    public Long getMessageId() {
+    public BigInteger getMessageId() {
         return messageId;
     }
 
-    public void setMessageId(Long messageId) {
+    public void setMessageId(BigInteger messageId) {
         this.messageId = messageId;
     }
 

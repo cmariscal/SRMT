@@ -42,7 +42,7 @@ public class MessageRepositoryTest {
 
         assertEquals(subject, dbMessage.getSubject());
 
-        logger.debug("Message ID: " + dbMessage.getMessageId() + " Message Date: " + dbMessage.getMessageDate().toString()
+        logger.info("Message ID: " + dbMessage.getMessageId() + " Message Date: " + dbMessage.getMessageDate().toString()
             + " Message Subject: " + dbMessage.getSubject());
     }
 }
